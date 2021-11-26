@@ -7,17 +7,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Blanchard художественная галерея</title>
 
+  <!-- Подключение скриптов маскирования -->
+  <script src="js/mask/inputmask.js"></script>
+
   <link rel="stylesheet" href="css/normalize.css">
   <link rel="stylesheet" href="https://unpkg.com/swiper@7/swiper-bundle.min.css">
+  <link rel="stylesheet" href="css/swiper/swiper-hall.css">
 
-  <!-- <link rel="stylesheet" href="css/swiper/swiper-bundle.css"> -->
+  <!-- Скрипт Яндекс-карты -->
+  <script src="https://api-maps.yandex.ru/2.1/?apikey=ваш API-ключ&lang=ru_RU" type="text/javascript"></script>
 
   <!-- Стили страницы -->
   <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
+
+  <!-- ----------- -->
   <!-- Шапка сайта -->
+  <!-- ----------- -->
+
   <header class="header">
     <div class="header__up">
       <div class="container container_flex">
@@ -34,7 +43,7 @@
         <div id="nav" class="nav">
           <ul class="nav__list">
             <li class="nav__item" v-for="(item, index) in navList" :key="index">
-              <a href="#" class="nav__item-link">{{ item }}</a>
+              <a href="#" @click="scrolling($event, item.blockID)" class="nav__item-link">{{ item.text }}</a>
             </li>
           </ul>
           <!-- Кнопка "войти" -->
@@ -54,16 +63,27 @@
     </div>
     <div class="header__down">
       <div class="container container_flex">
-        <div class="select-box">
-          <!-- Кастомные селекты -->
-          <!-- https://itchief.ru/javascript/custom-select -->
-          <div id="realism" class="header-select"></div>
-          <div id="impressionism" class="header-select"></div>
-          <div id="post-impressionism" class="header-select"></div>
-          <div id="avangard" class="header-select"></div>
-          <div id="futurism" class="header-select"></div>
+
+        <!-- Блок селектов -->
+        <div id="selects" class="selects">
+          <div class="select__box" v-for="(id, i) in arrId" :key="i">
+
+            <button class="select__field" :class="{ select_active: selectVisible[id] }"
+              @click="heightChange($event, id)"> {{ selected[id].text }} </button>
+
+            <ul class="select__list" :key="id">
+              <li class="select__shell" v-for="(option, j) in options[id]" :key="id + j">
+                <button class="select__item" tabindex="-1"
+                  @click="choice(id, option.text, option.value), heightCloset($event)">
+                  {{ option.text }}
+                </button>
+              </li>
+            </ul>
+
+          </div>
         </div>
 
+        <!-- Форма поиска -->
         <div class="form-box">
           <form class="search__form" action="">
             <input class="search__input" type="text" placeholder="Поиск по сайту">
@@ -75,10 +95,14 @@
     </div>
   </header>
 
+  <!-- ---------------- -->
   <!-- Основной контент -->
+  <!-- ---------------- -->
+
   <main class="main">
 
-    <!-- Хиро -->
+    <!-- Секция Хиро -->
+
     <section class="hero gray">
       <div class="container">
 
@@ -102,11 +126,12 @@
       </div>
     </section>
 
-    <!-- О нас -->
+    <!-- Секция О нас -->
+
     <section class="abaut">
       <div class="container">
 
-        <h2 class="h2 abaut__title">О нас</h2>
+        <h2 class="h2 abaut__title" id="abaut-h2">О нас</h2>
         <div class="abaut__text-box">
           <p class="abaut__text">
             Ясность нашей позиции очевидна: семантический разбор внешних противодействий однозначно определяет каждого
@@ -123,15 +148,35 @@
 
     </section>
 
-    <!-- Галерея -->
+    <!-- Секция Галерея -->
     <section class="hall gray">
       <div class="container hall__container">
 
         <div class="hall__content">
-          <h2 class="h2 hall__title">Галерея</h2>
+          <h2 class="h2 hall__title" id="hall-h2">Галерея</h2>
           <div class="hall__select">
             <span class="select__name">Фильтр:</span>
-            <div id="art" class="hall-select"></div>
+
+            <!-- Блок селект -->
+            <div id="select-art" class="selects">
+              <div class="select__box-art">
+
+                <button class="select__field select__field-art" :class="{ select_active: selectVisible.art }"
+                  @click="heightChange($event, id)"> {{ selected.art.text }} </button>
+                <div class="select__list select__list-box">
+                  <ul class="select__list-art">
+                    <li class="select__shell" v-for="(option, j) in options.art" :key="j">
+                      <button class="select__item select__item-art" tabindex="-1"
+                        @click="choice(option.text, option.value), heightCloset($event)">
+                        {{ option.text }}
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+
+
+              </div>
+            </div>
           </div>
           <div class="hall__text-box">
             <p class="hall__text">
@@ -142,29 +187,42 @@
         </div>
 
 
+        <section class="swiper-section">
+          <div class="">
 
-        <!-- Slider main container -->
-        <div id="hall" class="swiper swiper-hell">
-          <!-- Additional required wrapper -->
-          <div class="swiper-wrapper">
-            <!-- Slides -->
-            <div class="swiper-slide" v-for="(item, index) in arrayImgHall" :key="index">
-              <picture class="slide__picture">
-                <source :srcset="`${urlHall}${item[2]} 3x, ${urlHall}${item[1]} 2x, ${urlHall}${item[0]} 1x`">
-                <img class="slide__img" :src="urlHall + item[0]" :alt="item[3]">
-              </picture>
+            <!-- Слайдер в галереии -->
+            <div class="swiper-shell">
+              <div id="hall" class="swiper swiper-right--content">
+                <div class="swiper-right-btns">
+                  <button class="sw-btn swiper-btn--prev"></button>
+                  <div class="swiper-pagination--right"></div>
+                  <button class="sw-btn swiper-btn--next"></button>
+                </div>
+
+                <div class="swiper-wrapper">
+                  <div class="swiper-slide swiper-slide-effect" v-for="(item, index) in arrayImgHall" :key="index">
+                    <picture class="slide__picture">
+                      <source :srcset="`${urlHall}${item[2]} 3x, ${urlHall}${item[1]} 2x, ${urlHall}${item[0]} 1x`">
+                      <img class="swiper-slide--img" :src="urlHall + item[0]" :alt="item[3]">
+                    </picture>
+                  </div>
+                </div>
+
+              </div>
             </div>
+
+
           </div>
-        </div>
+        </section>
 
       </div>
     </section>
 
-    <!-- Каталог -->
-    <section class="catalog">
+    <!-- Секция Каталог -->
+    <section id="catalog" class="catalog">
       <div class="container">
         <div class="row relative">
-          <h2 class="h2 catalog__title">Каталог</h2>
+          <h2 class="h2 catalog__title" id="catalog-h2">Каталог</h2>
           <div class="catalog__text-box">
             <p class="catalog__text">
               Акционеры крупнейших компаний, которые представляют собой яркий пример континентально-европейского типа
@@ -178,404 +236,206 @@
 
           <!-- Табы -->
           <nav class="catalog__nav">
+
             <ul class="catalog__list">
-              <li class="catalog__item">
-                <button class="catalog__button catalog__button_active" data-land="fra"></button>
-              </li>
-              <li class="catalog__item">
-                <button class="catalog__button" data-land="deu"></button>
-              </li>
-              <li class="catalog__item">
-                <button class="catalog__button" data-land="ita"></button>
-              </li>
-              <li class="catalog__item">
-                <button class="catalog__button" data-land="rus"></button>
-              </li>
-              <li class="catalog__item">
-                <button class="catalog__button" data-land="bel"></button>
+              <li class="catalog__item" v-for="land in arrTab" :key="land">
+                <button class="catalog__button" :class="{ catalog__button_active: statusTab[land] }" :data-land="land"
+                  @click="choiceLand(land)"></button>
               </li>
             </ul>
+
           </nav>
 
           <div class="catalog__box">
 
             <div class="catalog__info">
-              <!-- Тут должна быть информация о художниках -->
+
+              <!-- информация о художнике -->
+              <template v-if="arrInfo.name && arrInfo.text && arrInfo.img[0]">
+                <picture class="catalog__picture">
+                  <source
+                    :srcset="`${urlImg}${arrInfo.img[3]} 3x, ${urlImg}${arrInfo.img[1]} 2x, ${urlImg}${arrInfo.img[0]} 1x`">
+                  <img class="" :src="urlImg + arrInfo.img[0]" :alt="`Изображение ${arrInfo.name}`">
+                </picture>
+                <h3 class="h3 catalog__name">{{arrInfo.name}}</h3>
+                <p class="catalog__live">{{arrInfo.live}}</p>
+                <p class="catalog__text">{{arrInfo.text}}</p>
+              </template>
+
+              <template v-else>
+                <picture class="catalog__picture">
+                  <img class="" :src="`${urlImg}cap.svg`" alt="Изображение отсутствует">
+                </picture>
+                <span class="panel__empty-title">Что мы о нём знаем?</span>
+                <span class="panel__empty-text">Пока ничего... Зато мы точно знаем, что в галерее есть на что
+                  посмотреть!</span>
+                <a href="#" class="panel__empty-link link__effect">В галерею</a>
+              </template>
             </div>
 
             <!-- Блок с аккордеонами -->
             <div class="catalog__acc">
-              <div id="rus" class="catalog__content"></div>
-              <div id="deu" class="catalog__content"></div>
-              <div id="fra" class="catalog__content catalog__content_active"></div>
-              <div id="ita" class="catalog__content"></div>
-              <div id="bel" class="catalog__content"></div>
+              <div class="catalog__content">
+                <div class="accordion-box" v-for="(itemArr, index) in data[land]" :key="index">
+                  <button class="accordion" @click="heightChangeAcc($event)">
+                    <span class="accordion__title">{{itemArr.age}}</span>
+                  </button>
+
+                  <ul class="panel panel__full" v-if="itemArr.masters.length > 0">
+                    <li class="panel__element" v-for="(item, j) in itemArr.masters" :key="`${index}-${j}`">
+                      <button class="panel__item link__effect" tabindex="-1" @click="arrInfo = item">
+                        {{item.name}}
+                      </button>
+                    </li>
+                  </ul>
+
+                  <div class="panel panel__empty" v-else>
+                    <div class="panel__empty-shell">
+                      <span class="panel__empty-title">Здесь пока пусто</span>
+                      <span class="panel__empty-text">А в галерее вы всегда можете найти что-то интересное для
+                        себя</span>
+                      <a href="#" class="panel__empty-link link__effect" tabindex="-1">В галерею</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
-
-          <!-- Аккордеон -->
-          <!-- <div class="accordion-box">
-          <button class="accordion">Вопрос 1</button>
-          <div class="panel">
-            <p>Ответ на Вопрос 1...</p>
-          </div>
-        </div> -->
         </div>
       </div>
     </section>
 
-    <!-- События -->
-    <section class="events">
+    <!-- Секция События -->
+    <section class="events" id="events">
       <div class="container">
-        <h2 class="h2 events__title">События</h2>
+        <h2 class="h2 events__title" id="events-h2">События</h2>
 
-        <!-- Slider main container -->
-        <div class="no-swiper">
-          <!-- Additional required wrapper -->
-          <div class="no-swiper-wrapper">
-            <!-- Slides -->
-            <article id="event-1" class="no-swiper-slide">
-              <p class="events__place-date">Музей им. Щусева</p>
-              <p class="events__place-date">с 20 марта по 30 апреля</p>
-              <h3 class="h3 events__title">Книжная гравюра в живом восприятии</h3>
-              <div class="events__box">
-                <p class="events__text">
-                  Один из ведущих флорентийских художников Кватроченто, основатель художественной династии, которую
-                  продолжили его брат Давид и сын Ридольфо.
-                </p>
-              </div>
-              <a href="#" class="events__link">Подробнее</a>
-            </article>
 
-            <article id="event-2" class="no-swiper-slide">
-              <p class="events__place-date">ММОМА</p>
-              <p class="events__place-date">24 марта 19:00</p>
-              <h3 class="h3 events__title">&laquo;Открытая дискуссия&raquo;. Дмитрий Петров и Сергей Ильин.</h3>
-              <div class="events__box">
-                <p class="events__text">
-                  Высокий уровень вовлечения представителей целевой аудитории является четким доказательством простого
-                  факта.
-                </p>
-              </div>
-              <a href="#" class="events__link">Подробнее</a>
-            </article>
+        <div class="events__box">
 
-            <article id="event-3" class="no-swiper-slide">
-              <p class="events__place-date">Еврейский музей</p>
-              <p class="events__place-date">с 31 марта по 21 апреля</p>
-              <h3 class="h3 events__title">Выставка &laquo;Формация 2020&raquo;</h3>
-              <div class="events__box">
-                <p class="events__text">
-                  Идейные соображения высшего порядка, а также современная методология разработки играет важную роль в
-                  формировании глубокомысленных рассуждений.
-                </p>
-              </div>
-              <a href="#" class="events__link">Подробнее</a>
-            </article>
+          <!-- Слайдер события -->
+          <div class="swiper swiper-events">
+            <div class="swiper-wrapper">
 
-            <article id="event-4" class="no-swiper-slide">
-              <p class="events__place-date">Третьяковка на Крымском валу</p>
-              <p class="events__place-date">с 30 марта по 30 апреля</p>
-              <h3 class="h3 events__title">XXIV Международная биеннале молодого искусства</h3>
-              <div class="events__box">
-                <p class="events__text">
-                  Внезапно, реплицированные с зарубежных источников, современные исследования.
-                </p>
-              </div>
-              <a href="#" class="events__link">Подробнее</a>
-            </article>
+              <article class="swiper-slide" v-for="item in arrayEvents">
+                <picture class="events__picture">
+                  <source
+                    :srcset="`${urlEvents}${item.img[2]} 3x, ${urlEvents}${item.img[1]} 2x, ${urlEvents}${item.img[0]} 1x`">
+                  <img class="events__img" :src="urlEvents + item.img[0]" :alt="item.title">
+                </picture>
+                <p class="events__place-date">{{ item.place }}</p>
+                <p class="events__place-date">{{ item.date }}</p>
+                <h3 class="h3 events__title">{{ item.title }}</h3>
+                <div class="events__box-text">
+                  <p class="events__text">{{ item.text }}</p>
+                </div>
+                <a href="#" class="link__effect events__link">Подробнее</a>
+              </article>
+            </div>
 
-            <article id="event-5" class="no-swiper-slide">
-              <p class="events__place-date">ММАМ</p>
-              <p class="events__place-date">с 8 апреля по 20 мая</p>
-              <h3 class="h3 events__title">Джон Винзор. Фотографии из серии &laquo;Метафора серебра&raquo;</h3>
-              <div class="events__box">
-                <p class="events__text">
-                  Один из ведущих флорентийских художников Кватроченто, основатель художественной династии, которую
-                  продолжили его брат Давид и сын Ридольфо.
-                </p>
-              </div>
-              <a href="#" class="events__link">Подробнее</a>
-            </article>
-
-            <article id="event-6" class="no-swiper-slide">
-              <p class="events__place-date">ММАМ</p>
-              <p class="events__place-date">с 8 апреля по 20 мая</p>
-              <h3 class="h3 events__title">Джон Винзор. Фотографии из серии &laquo;Метафора серебра&raquo;</h3>
-              <div class="events__box">
-                <p class="events__text">
-                  Один из ведущих флорентийских художников Кватроченто, основатель художественной династии, которую
-                  продолжили его брат Давид и сын Ридольфо.
-                </p>
-              </div>
-              <a href="#" class="events__link">Подробнее</a>
-            </article>
+            <!-- If we need pagination -->
+            <div class="swiper-events-pagination"></div>
 
           </div>
-          <!-- If we need pagination -->
-          <!-- <div class="swiper-pagination"></div> -->
 
-          <!-- If we need navigation buttons -->
-          <!-- <div class="swiper-button-prev"></div>
-            <div class="swiper-button-next"></div> -->
+          <ul class="events__list">
+            <li class="events__item" v-for="item in arrayEvents">
+              <div class="events__shell">
+                <picture class="events__picture">
+                  <source
+                    :srcset="`${urlEvents}${item.img[2]} 3x, ${urlEvents}${item.img[1]} 2x, ${urlEvents}${item.img[0]} 1x`">
+                  <img class="events__img" :src="urlEvents + item.img[0]" :alt="item.title">
+                </picture>
+                <div class="events__info">
+                  <p class="events__place-date">{{ item.place }}</p>
+                  <p class="events__place-date">{{ item.date }}</p>
+                  <h3 class="h3 events__title">{{ item.title }}</h3>
+                  <div class="events__box-text">
+                    <p class="events__text">{{ item.text }}</p>
+                  </div>
+                  <a href="#" class="events__link link__effect">Подробнее</a>
+                </div>
+              </div>
+            </li>
+          </ul>
 
-          <!-- If we need scrollbar -->
-          <!-- <div class="swiper-scrollbar"></div> -->
-          <a href="#" class="events__open">Открыть</a>
+          <a href="#" class="events__open style-btn" @click="heightEvents">Все события</a>
         </div>
 
-
-
       </div>
-      <!-- </div> -->
     </section>
 
-    <!-- Издания -->
-    <section class="publications">
+    <!-- Секция Издания -->
+    <section class="publications gray">
       <div class="container publications__container">
         <div class="publications-box">
-          <h2 class="h2 publications__title">Издания</h2>
+          <h2 class="h2 publications__title" id="publications-h2">Издания</h2>
 
-          <!-- Блок селектов -->
+          <!-- Блок чекбоксов -->
           <div class="publications__select">
-            <h3 class="h3 select__title">Категории</h3>
+            <h3 class="h3 checkbox__title">Категории</h3>
 
-            <ul class="select__box">
+            <ul class="checkbox__box" id="select__box">
 
-              <li class="select__item">
-                <label class="select__label">
-                  <input class="select__check" type="checkbox" name="hit" value="hit" tabindex="-1">
-                  <span class="select__name">Бестселлеры</span>
-                </label>
-              </li>
-
-              <li class="select__item">
-                <label class="select__label">
-                  <input class="select__check hidden" type="checkbox" name="art" value="art" tabindex="-1">
-                  <span class="select__name">Искусство</span>
-                </label>
-              </li>
-
-              <li class="select__item">
-                <label class="select__label">
-                  <input class="select__check hidden" type="checkbox" name="architec" value="architec" tabindex="-1">
-                  <span class="select__name">Архитектура</span>
-                </label>
-              </li>
-
-              <li class="select__item">
-                <label class="select__label">
-                  <input class="select__check hidden" type="checkbox" name="styling" value="styling" tabindex="-1">
-                  <span class="select__name">Дизайн</span>
-                </label>
-              </li>
-
-              <li class="select__item">
-                <label class="select__label">
-                  <input class="select__check hidden" type="checkbox" name="fashion" value="fashion" tabindex="-1">
-                  <span class="select__name">Мода</span>
-                </label>
-              </li>
-
-              <li class="select__item">
-                <label class="select__label">
-                  <input class="select__check hidden" type="checkbox" name="kids" value="kids" tabindex="-1">
-                  <span class="select__name">Детям</span>
-                </label>
-              </li>
-
-              <li class="select__item">
-                <label class="select__label">
-                  <input class="select__check hidden" type="checkbox" name="liter" value="liter" tabindex="-1">
-                  <span class="select__name">Художественная литература</span>
-                </label>
-              </li>
-
-              <li class="select__item">
-                <label class="select__label">
-                  <input class="select__check hidden" type="checkbox" name="publicism" value="publicism" tabindex="-1">
-                  <span class="select__name">Публицистика</span>
-                </label>
-              </li>
-
-              <li class="select__item">
-                <label class="select__label">
-                  <input class="select__check hidden" type="checkbox" name="guidebook" value="guidebook" tabindex="-1">
-                  <span class="select__name">Путеводители</span>
-                </label>
-              </li>
-
-              <li class="select__item">
-                <label class="select__label">
-                  <input class="select__check hidden" type="checkbox" name="philosophy" value="philosophy"
-                    tabindex="-1">
-                  <span class="select__name">Философия</span>
-                </label>
-              </li>
-
-              <li class="select__item">
-                <label class="select__label">
-                  <input class="select__check hidden" type="checkbox" name="training" value="training" tabindex="-1">
-                  <span class="select__name">Учебная литература</span>
-                </label>
-              </li>
-
-              <li class="select__item">
-                <label class="select__label">
-                  <input class="select__check hidden" type="checkbox" name="newspapers" value="newspapers"
-                    tabindex="-1">
-                  <span class="select__name">Журналы и газеты</span>
+              <li class="checkbox__item" v-for="item in list">
+                <label class="checkbox__label">
+                  <input class="checkbox__check" type="checkbox" :name="item.name" :value="item.value">
+                  <span class="checkbox__name">{{item.title}}</span>
                 </label>
               </li>
 
             </ul>
           </div>
 
-          <!-- Ввод цены -->
-          <div class="publications__price">
+          <!-- Форма Ввод цены -->
+          <div class="publications__price" id="price">
             <h3 class="h3 select__title">Цена</h3>
             <div class="price">
               <span class="price__text">От</span>
-              <input class="price__input" pattern="[0-9]*" type="number" min="50" max="25000">
+              <input class="price__input" type="number" v-model="minValue" />
               <span class="price__text">до</span>
-              <input class="price__input" type="number" min="50" max="25000">
+              <input class="price__input" type="number" v-model="maxValue" />
               <span class="price__text">руб.</span>
             </div>
           </div>
         </div>
 
-        <!-- Slider main container -->
-        <div class="swiper">
-
-          <div class="swiper-pagination-box">
-            <div class="swiper-button-prev"></div>
-            <div class="swiper-pagination"></div>
-            <div class="swiper-button-next"></div>
+        <!-- Слайдер издания -->
+        <div id="publications" class="swiper-publications">
+          <div class="swiper-right-btns">
+            <button class="sw-btn swiper-btn--prev"></button>
+            <div class="swiper-pagination--right"></div>
+            <button class="sw-btn swiper-btn--next"></button>
           </div>
 
-          <!-- Additional required wrapper -->
           <div class="swiper-wrapper">
-            <!-- Slides -->
-            <div class="swiper-slide">
+            <div class="swiper-slide" v-for="(slide, index) in arrayPublications" :key="index">
               <div class="publications__item">
                 <picture class="publications__picture">
                   <source
-                    srcset="img/publications/sale/sale_1@3.jpg 3x, img/publications/sale/sale_1@2.jpg 2x, img/publications/sale/sale_1.jpg 1x">
-                  <img class="" src="img/publications/sale/sale_1.jpg" alt="Я не разбираюсь в живописи">
+                    :srcset="`${urlPublications}${slide.img[2]} 3x, ${urlPublications}${slide.img[1]} 2x, ${urlPublications}${slide.img[0]} 1x`">
+                  <img class="" :src="urlPublications + slide.img[0]" :alt="slide.title">
                 </picture>
-                <div class="publications__discription">
-                  <h3 class="h3 publications__title">Искусство цвета</h3>
-                  <span class="publications__autor">Иттен, Иоханнес</span>
+                <div class="publications__discription-box">
+                  <div class="publications__discription">
+                    <h3 class="h3 publications__title">{{slide.title}}</h3>
+                    <span class="publications__autor">{{slide.autor}}</span>
+                  </div>
+                  <div class="publications__sale">{{slide.sale}} руб</div>
                 </div>
-                <div class="publications__sale">620 руб</div>
-                <button class="publications__order">Заказать</button>
-              </div>
-            </div>
-
-            <div class="swiper-slide">
-              <div class="publications__item">
-                <picture class="publications__picture">
-                  <source
-                    srcset="img/publications/sale/sale_2@3.jpg 3x, img/publications/sale/sale_2@2.jpg 2x, img/publications/sale/sale_2.jpg 1x">
-                  <img class="" src="img/publications/sale/sale_2.jpg" alt="Я не разбираюсь в живописи">
-                </picture>
-                <div class="publications__discription">
-                  <h3 class="h3 publications__title">Типографика</h3>
-                  <span class="publications__autor">Рудер, Эмиль</span>
-                </div>
-                <div class="publications__sale">2 450 руб</div>
-                <button class="publications__order">Заказать</button>
-              </div>
-            </div>
-
-            <div class="swiper-slide">
-              <div class="publications__item">
-                <picture class="publications__picture">
-                  <source
-                    srcset="img/publications/sale/sale_3@3.jpg 3x, img/publications/sale/sale_3@2.jpg 2x, img/publications/sale/sale_3.jpg 1x">
-                  <img class="" src="img/publications/sale/sale_3.jpg" alt="Я не разбираюсь в живописи">
-                </picture>
-                <div class="publications__discription">
-                  <h3 class="h3 publications__title">Книга про буквы</h3>
-                  <span class="publications__autor">Гордон, Юрий</span>
-                </div>
-                <div class="publications__sale">2 200 руб</div>
-                <button class="publications__order">Заказать</button>
-              </div>
-            </div>
-
-            <div class="swiper-slide">
-              <div class="publications__item">
-                <picture class="publications__picture">
-                  <source
-                    srcset="img/publications/sale/sale_4@3.jpg 3x, img/publications/sale/sale_4@2.jpg 2x, img/publications/sale/sale_4.jpg 1x">
-                  <img class="" src="img/publications/sale/sale_4.jpg" alt="Я не разбираюсь в живописи">
-                </picture>
-                <div class="publications__discription">
-                  <h3 class="h3 publications__title">Николай Ильин</h3>
-                  <span class="publications__autor">Кричевский, Владимир</span>
-                </div>
-                <div class="publications__sale">1 100 руб</div>
-                <button class="publications__order">Заказать</button>
-              </div>
-            </div>
-
-            <div class="swiper-slide">
-              <div class="publications__item">
-                <picture class="publications__picture">
-                  <source
-                    srcset="img/publications/sale/sale_5@3.jpg 3x, img/publications/sale/sale_5@2.jpg 2x, img/publications/sale/sale_5.jpg 1x">
-                  <img class="" src="img/publications/sale/sale_5.jpg" alt="Я не разбираюсь в живописи">
-                </picture>
-                <div class="publications__discription">
-                  <h3 class="h3 publications__title">Модульные сетки в граф...</h3>
-                  <span class="publications__autor">Мюллер-Брокманн, Йозеф</span>
-                </div>
-                <div class="publications__sale">1 450 руб</div>
-                <button class="publications__order">Заказать</button>
-              </div>
-            </div>
-
-            <div class="swiper-slide">
-              <div class="publications__item">
-                <picture class="publications__picture">
-                  <source
-                    srcset="img/publications/sale/sale_6@3.jpg 3x, img/publications/sale/sale_6@2.jpg 2x, img/publications/sale/sale_6.jpg 1x">
-                  <img class="" src="img/publications/sale/sale_6.jpg" alt="Я не разбираюсь в живописи">
-                </picture>
-                <div class="publications__discription">
-                  <h3 class="h3 publications__title">Эволюция графических ст...</h3>
-                  <span class="publications__autor">Хеллер, Чваст</span>
-                </div>
-                <div class="publications__sale">3 200 руб</div>
-                <button class="publications__order">Заказать</button>
-              </div>
-            </div>
-
-            <div class="swiper-slide">
-              <div class="publications__item">
-                <picture class="publications__picture">
-                  <source
-                    srcset="img/publications/sale/sale_7@3.jpg 3x, img/publications/sale/sale_7@2.jpg 2x, img/publications/sale/sale_7.jpg 1x">
-                  <img class="" src="img/publications/sale/sale_7.jpg" alt="Я не разбираюсь в живописи">
-                </picture>
-                <div class="publications__discription">
-                  <h3 class="h3 publications__title">Искусство и визуальное в...</h3>
-                  <span class="publications__autor">Арнхейм, Рудольф</span>
-                </div>
-                <div class="publications__sale">2 200 руб</div>
                 <button class="publications__order">Заказать</button>
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </section>
 
+    <!-- Секция Проекты -->
     <section class="projects">
       <div class="container">
-        <h2 class="h2 projects__title">Проекты</h2>
+        <h2 class="h2 projects__title" id="projects-h2">Проекты</h2>
         <div class="projects__text-box">
           <p class="projects__text">
             Предварительные выводы: постоянное информационно-пропагандистское обеспечение нашей деятельности однозначно
@@ -597,35 +457,41 @@
 
 
         <!-- Слайдер с партнерами -->
-        <!-- За основу взято https://itchief.ru/javascript/slider -->
         <h3 class="h3 projects__h3">Партнёры проектов:</h3>
-        <div class="slider-partners">
-          <div class="slider-partners__container">
-            <div class="slider-partners__wrapper">
-              <div class="slider-partners__items">
-                <!-- <div class="slider-partners__item">
-                  <a href="#" class="slider-partners__link">
-                    <picture class="slider-partners__picture">
-                      <source
-                        srcset="img/projects/workhouse@3.png 3x, img/projects/workhouse.png@2 2x, img/projects/workhouse.png 1x">
-                      <img class="" src="img/projects/workhouse.png" alt="Наш партнер workhouse">
-                    </picture>
-                  </a>
-                </div> -->
+
+        <div class="swiper-partners__box">
+          <button class="sw-btn swiper-partners-btn--prev"></button>
+          <div id="partners" class="swiper swiper-partners">
+            <div class="swiper-wrapper swiper-wrapper_partners">
+
+              <div class="swiper-slide" v-for="(slide, index) in arrayImgPartners" :key="index">
+                <div class="partners__item">
+                  <div class="slider-partners__items">
+                    <div class="slider-partners__item">
+                      <a href="#" class="slider-partners__link">
+                        <picture class="slider-partners__picture">
+                          <source
+                            :srcset="`${urlPartners}${slide[2]} 3x, ${urlPartners}${slide[1]} 2x, ${urlPartners}${slide[0]} 1x`">
+                          <img class="" :src="`${urlPartners}${slide[0]}`" :alt="`Наш партнер  ${slide[3]}`">
+                        </picture>
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
+
             </div>
           </div>
-          <!-- Кнопки для перехода к предыдущему и следующему слайду -->
-          <a href="#" class="slider-partners__control" data-slide="prev"></a>
-          <a href="#" class="slider-partners__control" data-slide="next"></a>
+          <button class="sw-btn swiper-partners-btn--next"></button>
         </div>
 
       </div>
     </section>
 
+    <!-- Секция Контакты -->
     <section class="contacts">
       <div class="container">
-        <h2 class="h2 contacts__title">Контакты</h2>
+        <h2 class="h2 contacts__title" id="contacts-h2">Контакты</h2>
         <div class="contacts__box">
 
           <div class="contacts__shell">
@@ -633,16 +499,21 @@
               <span class="contacts__address-fat">Шоурум № 4</span>Леонтьевский переулок, дом 5/1
             </address>
 
+            <!-- Форма обратной связи -->
             <section class="form__box">
-              <h3 class="form__title" aria-label="">Оставить заявку</h3>
+              <h3 class="form__title" aria-label="">Заказать обратный звонок</h3>
               <form action="https://jsonplaceholder.typicode.com/posts" autocomplete="on" method="POST" class="form">
                 <div class="form__shell-input">
-                  <input type="text" name="name" placeholder="Имя*" class="form__input" data-validate-field="name"
-                    required>
-                  <input type="tel" name="tel" placeholder="Телефон*" class="form__input" data-validate-field="tel"
-                    required>
+                  <label class="form__input-label">
+                    <input type="text" name="name" placeholder="Имя*" class="form__input" data-validate-field="name"
+                      required>
+                  </label>
+                  <label class="form__input-label">
+                    <input type="tel" name="tel" placeholder="Телефон*" class="form__input" data-validate-field="tel"
+                      required>
+                  </label>
                 </div>
-                <button type="submit" class="form__button">Заказать</button>
+                <button type="submit" class="form__button style-btn">Заказать</button>
               </form>
             </section>
 
@@ -666,10 +537,57 @@
 
   </main>
 
+  <!-- ------------ -->
   <!-- Подвал сайта -->
+  <!-- ------------ -->
+
   <footer class="footer">
+    <div class="container footer__container">
 
+      <!-- Логотип -->
+      <div class="logo__box">
+        <div class="logo">
+          <img src="./img/logo/Blanchard.svg" alt="Логотип компании Blanchard" class="logo__name">
+          <img src="./img/logo/art_gallery.svg" alt="Подпись под логотипом: художественная галерея" class="logo__title">
+        </div>
+      </div>
 
+      <!-- Социальные сети -->
+      <ul class="social__list">
+        <li class="social__item">
+          <a href="#" class="social__item-link">
+            <svg class="social__icon" width="45" height="45" viewbox="0 0 45 45" fill="none"
+              xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M22.5 0C10.074 0 0 10.0736 0 22.5C0 34.9264 10.074 45 22.5 45C34.926 45 45 34.9264 45 22.5C45 10.0736 34.926 0 22.5 0ZM33.9132 24.9335C34.9619 25.9577 36.0714 26.9217 37.0128 28.0519C37.4299 28.5519 37.823 29.0688 38.1222 29.6503C38.5495 30.4794 38.1637 31.3886 37.4216 31.4379L32.812 31.4369C31.6215 31.5354 30.6741 31.0553 29.8754 30.2414C29.2378 29.5927 28.6462 28.8999 28.0321 28.2292C27.7812 27.9539 27.517 27.6947 27.2021 27.4907C26.5737 27.0819 26.0277 27.2072 25.6677 27.8636C25.3008 28.5316 25.217 29.2719 25.182 30.0153C25.1319 31.1022 24.8041 31.3863 23.7135 31.4374C21.3832 31.5465 19.1721 31.1929 17.117 30.0181C15.3041 28.9818 13.901 27.5193 12.6783 25.8634C10.2973 22.6353 8.47381 19.0924 6.8354 15.4478C6.46665 14.627 6.73642 14.1878 7.64194 14.1707C9.14639 14.1417 10.6508 14.1454 12.1553 14.1694C12.7676 14.179 13.1727 14.5294 13.4079 15.1071C14.2209 17.1074 15.2176 19.0105 16.4665 20.7755C16.7994 21.2455 17.1391 21.7142 17.623 22.0461C18.157 22.4125 18.5639 22.2915 18.8158 21.6953C18.9769 21.3164 19.0464 20.9113 19.0814 20.5053C19.2011 19.1145 19.2153 17.7242 19.0082 16.339C18.8793 15.4722 18.3918 14.9124 17.5277 14.7485C17.0876 14.6652 17.152 14.5022 17.3661 14.2508C17.7376 13.8163 18.0856 13.5474 18.7812 13.5474L23.9893 13.5465C24.8101 13.7076 24.9942 14.0759 25.1056 14.9027L25.1102 20.6903C25.1006 21.0103 25.2709 21.9586 25.8454 22.1681C26.3058 22.32 26.6096 21.9508 26.8849 21.6594C28.1339 20.334 29.0237 18.7697 29.8206 17.1506C30.1723 16.4366 30.4757 15.6978 30.7703 14.9575C30.9895 14.4101 31.3301 14.1408 31.9479 14.15L36.9631 14.156C37.1108 14.156 37.2609 14.1574 37.4073 14.1827C38.2525 14.3273 38.4841 14.6909 38.2226 15.5154C37.811 16.8109 37.0114 17.89 36.2297 18.9718C35.3919 20.1301 34.4983 21.2478 33.6687 22.4111C32.9064 23.4746 32.9667 24.01 33.9132 24.9335Z" />
+            </svg>
+          </a>
+        </li>
+        <li class="social__item">
+          <a href="#" class="social__item-link">
+            <svg class="social__icon" width="45" height="45" viewbox="0 0 45 45" fill="none"
+              xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M18.1172 22.5C18.1172 24.8785 20.0453 26.8066 22.4238 26.8066C24.8024 26.8066 26.7305 24.8785 26.7305 22.5C26.7305 20.1215 24.8024 18.1934 22.4238 18.1934C20.0453 18.1934 18.1172 20.1215 18.1172 22.5Z" />
+              <path
+                d="M12.3521 14.8803C12.5591 14.3194 12.8894 13.8116 13.3185 13.3948C13.7353 12.9656 14.2428 12.6354 14.8041 12.4283C15.2593 12.2515 15.9432 12.0411 17.2029 11.9837C18.5655 11.9216 18.9741 11.9082 22.4238 11.9082C25.8738 11.9082 26.2824 11.9212 27.6447 11.9834C28.9044 12.0411 29.5886 12.2515 30.0435 12.4283C30.6048 12.6354 31.1126 12.9656 31.5291 13.3948C31.9582 13.8116 32.2885 14.319 32.4959 14.8803C32.6727 15.3356 32.8831 16.0198 32.9405 17.2795C33.0026 18.6418 33.016 19.0503 33.016 22.5004C33.016 25.9501 33.0026 26.3587 32.9405 27.7213C32.8831 28.981 32.6727 29.6649 32.4959 30.1201C32.2885 30.6814 31.9586 31.1889 31.5294 31.6057C31.1126 32.0348 30.6052 32.3651 30.0438 32.5721C29.5886 32.7493 28.9044 32.9597 27.6447 33.0171C26.2824 33.0792 25.8742 33.0922 22.4241 33.0922C18.9737 33.0922 18.5652 33.0792 17.2032 33.0171C15.9436 32.9597 15.2593 32.7493 14.8041 32.5721C13.6773 32.1375 12.7867 31.2469 12.3521 30.1201C12.1753 29.6649 11.9648 28.981 11.9071 27.7213C11.845 26.3587 11.8319 25.9501 11.8319 22.5004C11.8319 19.0503 11.845 18.6418 11.9071 17.2795C11.9645 16.0198 12.1749 15.3356 12.3521 14.8803ZM22.4238 29.1344C26.0881 29.1344 29.0585 26.1643 29.0585 22.5001C29.0585 18.8358 26.0881 15.8657 22.4238 15.8657C18.7599 15.8657 15.7894 18.8358 15.7894 22.5001C15.7894 26.1643 18.7599 29.1344 22.4238 29.1344ZM15.5271 17.1538C16.3834 17.1538 17.0776 16.4596 17.0776 15.6034C17.0776 14.7471 16.3834 14.0529 15.5271 14.0529C14.6709 14.0529 13.9767 14.7471 13.9767 15.6034C13.977 16.4596 14.6709 17.1538 15.5271 17.1538Z" />
+              <path
+                d="M22.6204 0C34.9364 0 44.9238 9.98747 44.9238 22.3034C44.9238 34.6194 34.9364 44.6069 22.6204 44.6069C10.3044 44.6069 0.316958 34.6194 0.316958 22.3034C0.316958 9.98747 10.3044 0 22.6204 0ZM9.8906 27.5836C9.95253 28.9469 10.1693 29.8777 10.4858 30.6924C11.1512 32.4127 12.5111 33.7727 14.2314 34.438C15.0458 34.7545 15.9769 34.971 17.3399 35.0332C18.7057 35.0955 19.1419 35.1105 22.6201 35.1105C26.0985 35.1105 26.5345 35.0955 27.9005 35.0332C29.2635 34.971 30.1946 34.7545 31.009 34.438C31.8639 34.1164 32.6378 33.6124 33.2776 32.9607C33.929 32.3212 34.433 31.547 34.7546 30.6924C35.0711 29.878 35.2879 28.9469 35.3498 27.5839C35.4128 26.2178 35.4274 25.7815 35.4274 22.3034C35.4274 18.8253 35.4128 18.389 35.3502 17.0233C35.2883 15.66 35.0718 14.7292 34.7553 13.9145C34.4337 13.0599 33.9293 12.2857 33.2776 11.6462C32.6382 10.9945 31.8639 10.4905 31.0094 10.1689C30.1946 9.85236 29.2638 9.63592 27.9005 9.57364C26.5348 9.51136 26.0985 9.49638 22.6204 9.49638C19.1423 9.49638 18.706 9.51136 17.3403 9.57398C15.9769 9.63592 15.0462 9.85236 14.2314 10.1685C13.3769 10.4901 12.6026 10.9945 11.9628 11.6462C11.3114 12.286 10.8071 13.0599 10.4858 13.9145C10.169 14.7292 9.95253 15.66 9.89026 17.0233C9.82798 18.389 9.81334 18.8253 9.81334 22.3034C9.81334 25.7815 9.82798 26.2178 9.8906 27.5836Z" />
+            </svg>
+          </a>
+        </li>
+        <li class="social__item">
+          <a href="#" class="social__item-link">
+            <svg class="social__icon" width="45" height="45" viewbox="0 0 45 45" fill="none"
+              xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M22.5 0C10.125 0 0 10.1431 0 22.6355C0 33.9307 8.23499 43.3057 18.99 45V29.1867H13.275V22.6355H18.99V17.6431C18.99 11.9729 22.3425 8.85542 27.495 8.85542C29.9475 8.85542 32.5125 9.28464 32.5125 9.28464V14.8645H29.6775C26.8875 14.8645 26.01 16.6039 26.01 18.3886V22.6355H32.265L31.2525 29.1867H26.01V45C31.312 44.1593 36.1399 41.4432 39.6223 37.342C43.1047 33.2408 45.012 28.0248 44.9999 22.6355C44.9999 10.1431 34.875 0 22.5 0Z" />
+            </svg>
+          </a>
+        </li>
+      </ul>
+
+    </div>
   </footer>
 </body>
 
@@ -677,21 +595,201 @@
 <script src="js/vue/vue.js"></script>
 <script src="js/vue/nav.js"></script>
 <script src="js/vue/swiperHall.js"></script>
+<script src="js/vue/swiperEvents.js"></script>
+<script src="js/vue/swiperPublications.js"></script>
+<script src="js/vue/selects.js"></script>
+<script src="js/vue/selectArt.js"></script>
+<script src="js/vue/catalog.js"></script>
+<script src="js/vue/selectBox.js"></script>
+<script src="js/vue/price.js"></script>
+<script src="js/vue/swiperPartners.js"></script>
 
 <script src="https://unpkg.com/swiper@7/swiper-bundle.min.js"></script>
 
+<!-- Валидация -->
+<!-- <script src="https://unpkg.com/vee-validate@next"></script> -->
+
+
 <!-- <script src="js/swiper/swiper-bundle.js"></script> -->
 
-
 <script>
-  const swiper = new Swiper('.swiper', {
+  const gallerySlider = new Swiper(".swiper-right--content", {
     slidesPerView: 3,
     slidesPerGroup: 3,
     grid: {
-      rows: 2    }
+      rows: 2
+    },
+    spaceBetween: 30,
+    pagination: {
+      el: ".swiper-pagination--right",
+      type: "fraction"
+    },
+    navigation: {
+      nextEl: ".swiper-btn--next",
+      prevEl: ".swiper-btn--prev"
+    },
 
+    breakpoints: {
+      320: {
+        slidesPerView: 1,
+        grid: {
+          rows: 1
+        },
+        spaceBetween: 0
+      },
+      576: {
+        slidesPerView: 2,
+        grid: {
+          rows: 2
+        },
+        spaceBetween: 30
+      },
+
+      1200: {
+        slidesPerView: 3,
+        grid: {
+          rows: 2
+        },
+        spaceBetween: 50
+      }
+    },
+  });
+
+</script>
+
+<script>
+  const swiperEvents = new Swiper('.swiper-events', {
+    pagination: {
+      el: '.swiper-pagination-box',
+    },
+
+    breakpoints: {
+      320: {
+        slidesPerView: 1,
+        grid: {
+          rows: 1
+        },
+        spaceBetween: 0
+      },
+    },
   });
 </script>
 
+<script>
+  const publicationsSlider = new Swiper("#publications", {
+    slidesPerView: 3,
+    slidesPerGroup: 3,
+    spaceBetween: 30,
+    pagination: {
+      el: ".swiper-pagination--right",
+      type: "fraction"
+    },
+    navigation: {
+      nextEl: ".swiper-btn--next",
+      prevEl: ".swiper-btn--prev"
+    },
+  });
+</script>
+
+<script>
+  const partnersSlider = new Swiper("#partners", {
+    slidesPerView: 3,
+    slidesPerGroup: 3,
+    spaceBetween: 30,
+
+    navigation: {
+      nextEl: ".swiper-partners-btn--next",
+      prevEl: ".swiper-partners-btn--prev"
+    },
+  });
+</script>
+
+<!-- Подключение скриптов толтипа -->
+<script src="js/tooltip/popper.min.js"></script>
+<script src="js/tooltip/tippy-bundle.umd.js"></script>
+<script>
+  tippy('[data-tooltip-1]', {
+    content: 'Пример современных тенденций - современная методология разработки ',
+    placement: 'top',
+    delay: 300,
+    theme: 'purple',
+  });
+
+  tippy('[data-tooltip-2]', {
+    content: 'Приятно, граждане, наблюдать, как сделанные на базе аналитики выводы вызывают у вас эмоции',
+    placement: 'top',
+    delay: 300,
+    theme: 'purple',
+  });
+
+  tippy('[data-tooltip-3]', {
+    content: 'В стремлении повысить качество',
+    placement: 'top',
+    delay: 300,
+    theme: 'purple',
+  });
+</script>
+
+<!-- Подключение скриптов Яндекс карты -->
+<script type="text/javascript">
+  ymaps.ready(init);
+  function init() {
+    var myMap = new ymaps.Map("map", {
+      center: [55.758414, 37.601263],
+      zoom: 15
+    });
+    var myPlacemark = new ymaps.Placemark([55.758414, 37.601263], {}, {
+      iconLayout: 'default#image',
+      iconImageHref: './img/yandex_marker.svg',
+      iconImageSize: [20, 20],
+      iconImageOffset: [-10, -10]
+    });
+    myMap.geoObjects.add(myPlacemark);
+  }
+</script>
+
+<!-- Подключение конфигурации маскирования -->
+<script>
+  const im = new Inputmask("+7 (999) 999-99-99");
+  im.mask(document.querySelectorAll("input[type='tel']"));
+</script>
+
+<!-- Подключение скриптов валидатора -->
+<script src="js/validate/just-validate.js"></script>
+
+<!-- Подключение конфигурации валидатора -->
+<script>
+  new JustValidate('.form', {
+    rules: {
+      name: {
+        required: true,
+        minLength: 2,
+        maxLength: 30,
+        function: (name, value) => {
+          return value.match(/^[а-яА-ЯёЁa-zA-Z]+$/i);
+        }
+      },
+      tel: {
+        required: true,
+        function: (name, value) => {
+          const phone = document.querySelector("[data-validate-field='tel']").inputmask.unmaskedvalue();
+          return Number(phone) && phone.length === 10;
+        }
+      },
+    },
+    messages: {
+      name: {
+        minLength: 'Минимальная длина 2 буквы',
+        maxLength: 'Максимальная длина 30 букв',
+        required: 'Как вас зовут?',
+        function: 'Допускается ввод только букв',
+      },
+      tel: {
+        required: 'Укажите ваш телеон',
+        function: 'Недопустимый формат'
+      }
+    }
+  });
+</script>
 
 </html>
